@@ -3,7 +3,7 @@ from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class ElasticSearchSettings(BaseSettings):
+class ElasticLoggerConfig(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
     elastic_port: str
     elastic_host: str
@@ -19,7 +19,4 @@ class ElasticSearchSettings(BaseSettings):
         if value is None:
             return f"{values.data['elastic_host']}:{values.data['elastic_port']}"
         return value
-
-
-elasticsearch_settings = ElasticSearchSettings()
 

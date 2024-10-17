@@ -8,7 +8,7 @@ from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 import json
 import threading
-from settings import elasticsearch_settings
+from logger_config import ElasticLoggerConfig
 
 class ElasticsearchHandler(logging.Handler):
     def __init__(self, es_config: Dict[str, Any], index: str):
@@ -81,7 +81,7 @@ class ElasticsearchHandler(logging.Handler):
 class AsyncLogger:
     def __init__(self, name: str = "FastAPI", level: int = logging.INFO, 
                  es_config: Optional[Dict[str, Any]] = None, 
-                 es_index: str = elasticsearch_settings.elastic_log_index_name,
+                 es_index: str = "logs",
                  es_level: int = logging.WARNING):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
@@ -126,11 +126,6 @@ class AsyncLogger:
     async def debug(self, msg: Any) -> None:
         await self.log(logging.DEBUG, msg)
 
-# Example configuration
-es_config = {
-    'hosts': [elasticsearch_settings.elastic_url],
-    'http_auth': (elasticsearch_settings.elastic_username, elasticsearch_settings.elastic_password),
-}
 
 def get_log_level(level: str):
     level = level.upper()
@@ -142,6 +137,21 @@ def get_log_level(level: str):
         "CRITICAL": logging.CRITICAL
     }.get(level, logging.WARNING)
     
-    
-# Create a global instance of AsyncLogger
-async_logger = AsyncLogger(es_config=es_config, es_level=get_log_level(elasticsearch_settings.elastic_log_level))
+
+_logger_instance = None
+_logger_lock = threading.Lock()
+
+def get_logger(elastic_logger_configs: ElasticLoggerConfig):
+    global _logger_instance
+    with _logger_lock: 
+        if _logger_instance is None:
+            es_config = {
+                'hosts': [elastic_logger_configs.elastic_url],
+                'http_auth': (elastic_logger_configs.elastic_username, elastic_logger_configs.elastic_password),
+            }
+            _logger_instance = AsyncLogger(
+                es_config=es_config, 
+                es_level=get_log_level(elastic_logger_configs.elastic_log_level), 
+                es_index=elastic_logger_configs.elastic_log_index_name
+            )
+    return _logger_instance
