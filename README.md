@@ -17,7 +17,7 @@ This allows for non-blocking, asynchronous logging in distributed environments.
 Install the package using pip:
 
 ```bash
-pip install async_logger
+pip install async_elastic_logger
 ```
 
 ## Usage

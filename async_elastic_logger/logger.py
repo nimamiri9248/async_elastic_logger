@@ -8,7 +8,8 @@ from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 import json
 import threading
-from logger_config import ElasticLoggerConfig
+from .logger_config import ElasticLoggerConfig
+import traceback
 
 class ElasticsearchHandler(logging.Handler):
     def __init__(self, es_config: Dict[str, Any], index: str):
@@ -24,14 +25,22 @@ class ElasticsearchHandler(logging.Handler):
         self.flush_thread.daemon = True
         self.flush_thread.start()
 
+    
     def emit(self, record):
+        if record.exc_info:
+            exc_type, exc_value, exc_tb = record.exc_info
+            formatted_traceback = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
+        else:
+            formatted_traceback = None
+
         log_entry = {
             'timestamp': record.created,
             'level': record.levelname,
-            'message': record.getMessage()
+            'message': record.getMessage(),
+            'service_name': record.name,
+            'traceback': formatted_traceback
         }
         self.buffer.put(log_entry)
-
     def _run_event_loop(self):
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self._flush_loop())
