@@ -88,7 +88,7 @@ class ElasticsearchHandler(logging.Handler):
         super().close()
 
 class AsyncLogger:
-    def __init__(self, name: str = "FastAPI", level: int = logging.INFO, 
+    def __init__(self, name: str = "my-app", level: int = logging.INFO, 
                  es_config: Optional[Dict[str, Any]] = None, 
                  es_index: str = "logs",
                  es_level: int = logging.WARNING):
@@ -150,7 +150,7 @@ def get_log_level(level: str):
 _logger_instance = None
 _logger_lock = threading.Lock()
 
-def get_logger(elastic_logger_configs: ElasticLoggerConfig):
+def get_logger(elastic_logger_configs: ElasticLoggerConfig, service_name: str | None = None):
     global _logger_instance
     with _logger_lock: 
         if _logger_instance is None:
@@ -161,6 +161,7 @@ def get_logger(elastic_logger_configs: ElasticLoggerConfig):
             _logger_instance = AsyncLogger(
                 es_config=es_config, 
                 es_level=get_log_level(elastic_logger_configs.elastic_log_level), 
-                es_index=elastic_logger_configs.elastic_log_index_name
+                es_index=elastic_logger_configs.elastic_log_index_name,
+                name=service_name if service_name is not None else "my-app"
             )
     return _logger_instance
