@@ -38,10 +38,7 @@ class ElasticsearchHandler(logging.Handler):
             "mappings": {
                 "properties": {
                     "timestamp": {
-                        "type": "date",
-                        "fields": {
-                            "keyword": {"type": "keyword"}
-                        }
+                        "type": "date"
                     },
                     "level": {"type": "keyword"},
                     "message": {
@@ -242,6 +239,10 @@ class AsyncLogger:
                  body: Optional[Any] = None, exc_info: Optional[bool] = None) -> None:
         extra = {'context': context, 'body': body}
         self.logger.log(level, msg, extra=extra, exc_info=exc_info)
+        
+    def info_sync(self, msg: Any, context: Optional[Dict[str, Any]] = None,
+                  body: Optional[Any] = None, exc_info: Optional[bool] = None) -> None:
+        self.log_sync(logging.INFO, msg, context, body, exc_info)
 
     def error_sync(self, msg: Any, context: Optional[Dict[str, Any]] = None,
                    body: Optional[Any] = None, exc_info: Optional[bool] = None) -> None:
